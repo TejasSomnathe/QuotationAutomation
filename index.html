@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solar Quotation Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        padding: 20px;
+      }
+      .container {
+        max-width: 700px;
+        margin: auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 16px;
+      }
+      label {
+        font-weight: bold;
+        margin-top: 10px;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Solar Quotation Auto-Generator</h2>
+
+      <label>Client Name</label>
+      <input id="clientName" type="text" placeholder="Enter client name" />
+
+      <label>Address</label>
+      <input id="address" type="text" placeholder="Enter address" />
+
+      <label>Location</label>
+      <input id="location" type="text" placeholder="Enter location" />
+
+      <label>Project Capacity (KW)</label>
+      <input id="capacity" type="number" placeholder="Ex: 4" />
+
+      <label>Rate per KW</label>
+      <input id="rate" type="number" placeholder="Ex: 66000" />
+
+      <button onclick="generateQuotation()">Generate Updated PDF</button>
+    </div>
+
+    <script>
+      async function generateQuotation() {
+        const clientName = document.getElementById("clientName").value;
+        const address = document.getElementById("address").value;
+        const location = document.getElementById("location").value;
+        const capacity = parseFloat(document.getElementById("capacity").value);
+        const rate = parseFloat(document.getElementById("rate").value);
+
+        const amount = capacity * rate;
+        const gst = amount * 0.138;
+        const net = amount + gst;
+
+        const existingPdfBytes = await fetch("content.pdf").then((r) =>
+          r.arrayBuffer()
+        );
+        const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+        const pages = pdfDoc.getPages();
+        const firstPage = pages[0];
+
+        const { width, height } = firstPage.getSize();
+        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+        function write(text, x, y) {
+          firstPage.drawText(text, { x, y, size: 12, font });
+        }
+
+        write(clientName, 150, height - 150);
+        write(location, 150, height - 260);
+        write(address, 150, height - 280);
+        write(capacity + " KW", 150, height - 320);
+        write(rate.toString(), 300, height - 355);
+
+        write(amount.toLocaleString(), 300, height - 390);
+        write(gst.toFixed(2), 300, height - 410);
+        write(net.toLocaleString(), 300, height - 430);
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Updated_Quotation.pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    </script>
+  </body>
+</html>
