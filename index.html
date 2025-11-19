@@ -49,9 +49,6 @@
       <label>Project Capacity (KW)</label>
       <input id="capacity" type="number" placeholder="Ex: 4" />
 
-      <label>Rate per KW</label>
-      <input id="rate" type="number" placeholder="Ex: 66000" />
-
       <button onclick="generateQuotation()">Generate Updated PDF</button>
     </div>
 
@@ -61,9 +58,8 @@
         const address = document.getElementById("address").value;
         const location = document.getElementById("location").value;
         const capacity = parseFloat(document.getElementById("capacity").value);
-        const rate = parseFloat(document.getElementById("rate").value);
 
-        const amount = capacity * rate;
+        const amount = capacity * 69000;
         const gst = amount * 0.138;
         const net = amount + gst;
 
@@ -81,15 +77,22 @@
           firstPage.drawText(text, { x, y, size: 12, font });
         }
 
-        write(clientName, 150, height - 150);
-        write(location, 150, height - 260);
-        write(address, 150, height - 280);
-        write(capacity + " KW", 150, height - 320);
-        write(rate.toString(), 300, height - 355);
+        const today = new Date();
+        const day = today.getDate();
+        const month = today.toLocaleString("en-US", { month: "long" });
+        const year = today.getFullYear();
+        const formattedDate = `${day}-${month}-${year}`;
+        console.log(formattedDate);
+        write(clientName, 150, height - 140);
+        write(location, 150, height - 158);
+        write(address, 150, height - 172);
+        write(capacity + " KW", 150, height - 124);
+        write(formattedDate, 150, height - 196);
 
-        write(amount.toLocaleString(), 300, height - 390);
-        write(gst.toFixed(2), 300, height - 410);
-        write(net.toLocaleString(), 300, height - 430);
+        write(capacity + " KW", 310, height - 267);
+        write(amount.toLocaleString(), 500, height - 267);
+        write(gst.toFixed(2).toLocaleString(), 500, height - 287);
+        write(net.toLocaleString(), 500, height - 307);
 
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
