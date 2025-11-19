@@ -6,30 +6,199 @@
     <title>Solar Quotation Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: #f4f4f4;
-        padding: 20px;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 25%,
+          #f093fb 50%,
+          #4facfe 75%,
+          #667eea 100%
+        );
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        padding: 40px 20px;
+        min-height: 100vh;
+      }
+
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
       .container {
         max-width: 700px;
         margin: auto;
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 50px 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3),
+          0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        border: 1px solid rgba(255, 255, 255, 0.8);
       }
-      input,
+
+      h2 {
+        color: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        text-align: center;
+        letter-spacing: -0.5px;
+      }
+
+      label {
+        font-weight: 600;
+        margin-top: 20px;
+        display: block;
+        color: #333;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 16px;
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+        font-family: inherit;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1),
+          inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        background: #fff;
+      }
+
+      input::placeholder {
+        color: #999;
+      }
+
       button {
         width: 100%;
-        padding: 10px;
-        margin: 10px 0;
+        padding: 14px 20px;
+        margin: 20px 0 16px 0;
         font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
-      label {
-        font-weight: bold;
-        margin-top: 10px;
+
+      #generateBtn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      #generateBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+      }
+
+      #generateBtn:active {
+        transform: translateY(0);
+      }
+
+      #resetBtn {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+        width: auto;
+        padding: 10px 20px;
+        margin: 0;
+        font-size: 13px;
+        box-shadow: 0 5px 15px rgba(245, 87, 108, 0.2);
+      }
+
+      #resetBtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+      }
+
+      .counter-section {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 15px;
+        background: linear-gradient(
+          135deg,
+          rgba(102, 126, 234, 0.08),
+          rgba(118, 75, 162, 0.08)
+        );
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        backdrop-filter: blur(10px);
+      }
+
+      .counter-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .counter-info {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      .counter-info strong {
         display: block;
+        color: #333;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+
+      #quotationNumber {
+        display: block;
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+      }
+
+      #lastDownload {
+        font-size: 12px;
+        color: #888;
+        font-style: italic;
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 8px;
       }
     </style>
   </head>
@@ -52,36 +221,18 @@
       <label>Quotation Date</label>
       <input id="quotationDate" type="date" />
 
-      <button onclick="generateQuotation()">Generate Updated PDF</button>
-      <div
-        style="
-          margin-top: 16px;
-          padding: 12px;
-          border: 1px solid #e0e0e0;
-          border-radius: 8px;
-          background: #fafafa;
-        "
-      >
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-          "
-        >
-          <div>
-            <strong>Quotation Number:</strong>
+      <button id="generateBtn" onclick="generateQuotation()">
+        Generate Updated PDF
+      </button>
+      <div class="counter-section">
+        <div class="counter-header">
+          <div class="counter-info">
+            <strong>Quotation Number</strong>
             <span id="quotationNumber">DHARTI/019</span>
-            <div style="font-size: 12px; color: #666" id="lastDownload">
-              (no downloads yet)
-            </div>
+            <div id="lastDownload">(no downloads yet)</div>
           </div>
-          <div style="display: flex; gap: 8px">
-            <button id="resetBtn" style="width: auto; padding: 8px 12px">
-              Reset Counter
-            </button>
+          <div class="btn-group">
+            <button id="resetBtn">Reset Counter</button>
           </div>
         </div>
       </div>
