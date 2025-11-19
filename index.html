@@ -60,7 +60,7 @@
         const capacity = parseFloat(document.getElementById("capacity").value);
 
         const amount = capacity * 69000;
-        const gst = amount * 0.138;
+        const gst = amount * 0.088;
         const net = amount + gst;
 
         const existingPdfBytes = await fetch("content.pdf").then((r) =>
@@ -83,6 +83,7 @@
         const year = today.getFullYear();
         const formattedDate = `${day}-${month}-${year}`;
         console.log(formattedDate);
+        write("DHARTI/019", 150, height - 105);
         write(clientName, 150, height - 140);
         write(location, 150, height - 158);
         write(address, 150, height - 172);
