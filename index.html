@@ -49,10 +49,97 @@
       <label>Project Capacity (KW)</label>
       <input id="capacity" type="number" placeholder="Ex: 4" />
 
+      <label>Quotation Date</label>
+      <input id="quotationDate" type="date" />
+
       <button onclick="generateQuotation()">Generate Updated PDF</button>
+      <div
+        style="
+          margin-top: 16px;
+          padding: 12px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          background: #fafafa;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+          "
+        >
+          <div>
+            <strong>Quotation Number:</strong>
+            <span id="quotationNumber">DHARTI/019</span>
+            <div style="font-size: 12px; color: #666" id="lastDownload">
+              (no downloads yet)
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button id="resetBtn" style="width: auto; padding: 8px 12px">
+              Reset Counter
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
+      // Persistent quotation number using localStorage
+      const QUOTATION_PREFIX = "DHARTI";
+      const STORAGE_KEY = "quotationNumber";
+      const STORAGE_TS_KEY = "quotationDownloadsLastTs";
+
+      function getStoredNumber() {
+        const v = localStorage.getItem(STORAGE_KEY);
+        return v ? parseInt(v, 10) : 19;
+      }
+
+      function setStoredNumber(n) {
+        localStorage.setItem(STORAGE_KEY, String(n));
+      }
+
+      function getLastTs() {
+        return localStorage.getItem(STORAGE_TS_KEY);
+      }
+
+      function setLastTs(iso) {
+        localStorage.setItem(STORAGE_TS_KEY, iso);
+      }
+
+      function getQuotationNumber() {
+        return `${QUOTATION_PREFIX}/${String(getStoredNumber()).padStart(
+          3,
+          "0"
+        )}`;
+      }
+
+      function updateNumberDisplay() {
+        document.getElementById("quotationNumber").textContent =
+          getQuotationNumber();
+        const ts = getLastTs();
+        const lastEl = document.getElementById("lastDownload");
+        if (ts) {
+          const d = new Date(ts);
+          lastEl.textContent = `Last: ${d.toLocaleString()}`;
+        } else {
+          lastEl.textContent = "(no downloads yet)";
+        }
+      }
+
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        if (!confirm("Reset quotation number counter?")) return;
+        setStoredNumber(19);
+        localStorage.removeItem(STORAGE_TS_KEY);
+        updateNumberDisplay();
+      });
+
+      // initialize display on load
+      updateNumberDisplay();
+
       async function generateQuotation() {
         const clientName = document.getElementById("clientName").value;
         const address = document.getElementById("address").value;
@@ -69,6 +156,7 @@
         const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
         const pages = pdfDoc.getPages();
         const firstPage = pages[0];
+        const secondPage = pages[1];
 
         const { width, height } = firstPage.getSize();
         const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
@@ -76,14 +164,24 @@
         function write(text, x, y) {
           firstPage.drawText(text, { x, y, size: 12, font });
         }
+        function writeSecond(text, x, y) {
+          secondPage.drawText(text, { x, y, size: 12, font });
+        }
 
-        const today = new Date();
-        const day = today.getDate();
-        const month = today.toLocaleString("en-US", { month: "long" });
-        const year = today.getFullYear();
+        // Get date from form input, or use today's date if not provided
+        const dateInput = document.getElementById("quotationDate").value;
+        let selectedDate;
+        if (dateInput) {
+          selectedDate = new Date(dateInput + "T00:00:00");
+        } else {
+          selectedDate = new Date();
+        }
+        const day = selectedDate.getDate();
+        const month = selectedDate.toLocaleString("en-US", { month: "long" });
+        const year = selectedDate.getFullYear();
         const formattedDate = `${day}-${month}-${year}`;
         console.log(formattedDate);
-        write("DHARTI/019", 150, height - 105);
+        write(getQuotationNumber(), 150, height - 105);
         write(clientName, 150, height - 140);
         write(location, 150, height - 158);
         write(address, 150, height - 172);
@@ -95,6 +193,8 @@
         write(gst.toFixed(2).toLocaleString(), 500, height - 287);
         write(net.toLocaleString(), 500, height - 307);
 
+        // writeSecond();
+
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
@@ -105,6 +205,15 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        // increment quotation number and save timestamp
+        try {
+          const cur = getStoredNumber();
+          setStoredNumber(cur + 1);
+          setLastTs(new Date().toISOString());
+          updateNumberDisplay();
+        } catch (e) {
+          console.error("Failed to update quotation number", e);
+        }
       }
     </script>
   </body>
